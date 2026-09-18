@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# Generated map output
+interactive_star_map.html
+star_route.png
+star_route_3d.png
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Archived development code
+Old/
