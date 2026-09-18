@@ -47,23 +47,110 @@ class MainWindow(QMainWindow):
         self.resize(1500, 950)
 
         self._build_ui()
+        self._apply_style()
 
     def _build_ui(self):
+
         central = QWidget()
-        self.setCentralWidget(central)
 
-        root_layout = QVBoxLayout(central)
-        root_layout.setContentsMargins(10, 10, 10, 10)
-        root_layout.setSpacing(10)
+        self.setCentralWidget(
+            central
+        )
 
-        controls = QGroupBox("Navigation")
-        controls_layout = QFormLayout(controls)
+        root_layout = QVBoxLayout(
+            central
+        )
 
-        self.start_input = QLineEdit("Sol")
-        self.start_input.setPlaceholderText("Starting system")
+        root_layout.setContentsMargins(
+            12,
+            12,
+            12,
+            12
+        )
+
+        root_layout.setSpacing(
+            10
+        )
+
+        # ========================================================
+        # HEADER
+        # ========================================================
+
+        header = QLabel(
+            "STAR NAVIGATOR"
+        )
+
+        header.setObjectName(
+            "appTitle"
+        )
+
+        root_layout.addWidget(
+            header
+        )
+
+        # ========================================================
+        # MAIN SPLITTER
+        # ========================================================
+
+        main_splitter = QSplitter()
+
+        # ========================================================
+        # LEFT SIDEBAR
+        # ========================================================
+
+        sidebar = QWidget()
+
+        sidebar_layout = QVBoxLayout(
+            sidebar
+        )
+
+        sidebar_layout.setContentsMargins(
+            8,
+            8,
+            8,
+            8
+        )
+
+        sidebar_layout.setSpacing(
+            12
+        )
+
+        # --------------------------------------------------------
+        # Navigation group
+        # --------------------------------------------------------
+
+        navigation_group = QGroupBox(
+            "NAVIGATION"
+        )
+
+        navigation_layout = QFormLayout(
+            navigation_group
+        )
+
+        navigation_layout.setContentsMargins(
+            12,
+            14,
+            12,
+            12
+        )
+
+        navigation_layout.setSpacing(
+            10
+        )
+
+        self.start_input = QLineEdit(
+            "Sol"
+        )
+
+        self.start_input.setPlaceholderText(
+            "Starting system"
+        )
 
         self.destination_input = QLineEdit()
-        self.destination_input.setPlaceholderText("Destination system")
+
+        self.destination_input.setPlaceholderText(
+            "Destination system"
+        )
 
         # ========================================================
         # STAR NAME AUTOCOMPLETE
@@ -109,6 +196,10 @@ class MainWindow(QMainWindow):
                 QCompleter.CompletionMode.PopupCompletion
             )
 
+            completer.setMaxVisibleItems(
+                12
+            )
+
         self.start_input.setCompleter(
             self.start_completer
         )
@@ -118,53 +209,277 @@ class MainWindow(QMainWindow):
         )
 
         self.route_mode = QComboBox()
-        self.route_mode.addItem("Shortest Distance", "shortest_distance")
-        self.route_mode.addItem("Fewest Jumps", "fewest_jumps")
+
+        self.route_mode.addItem(
+            "Shortest Distance",
+            "shortest_distance"
+        )
+
+        self.route_mode.addItem(
+            "Fewest Jumps",
+            "fewest_jumps"
+        )
 
         self.background_radius = QDoubleSpinBox()
-        self.background_radius.setRange(1.0, 100.0)
-        self.background_radius.setSingleStep(5.0)
-        self.background_radius.setDecimals(1)
-        self.background_radius.setValue(BACKGROUND_RADIUS)
-        self.background_radius.setSuffix(" ly")
 
-        self.generate_button = QPushButton("Generate Route")
-        self.generate_button.clicked.connect(self.generate_route)
+        self.background_radius.setRange(
+            1.0,
+            100.0
+        )
 
-        self.status_label = QLabel("Ready")
+        self.background_radius.setSingleStep(
+            5.0
+        )
 
-        controls_layout.addRow("Start:", self.start_input)
-        controls_layout.addRow("Destination:", self.destination_input)
-        controls_layout.addRow("Route:", self.route_mode)
-        controls_layout.addRow("Background:", self.background_radius)
-        controls_layout.addRow(self.generate_button)
-        controls_layout.addRow("Status:", self.status_label)
+        self.background_radius.setDecimals(
+            1
+        )
 
-        root_layout.addWidget(controls)
+        self.background_radius.setValue(
+            BACKGROUND_RADIUS
+        )
 
-        splitter = QSplitter()
+        self.background_radius.setSuffix(
+            " ly"
+        )
 
-        route_panel = QWidget()
-        route_layout = QVBoxLayout(route_panel)
-        route_layout.setContentsMargins(8, 8, 8, 8)
+        self.generate_button = QPushButton(
+            "GENERATE ROUTE"
+        )
 
-        route_title = QLabel("Route Information")
-        route_layout.addWidget(route_title)
+        self.generate_button.clicked.connect(
+            self.generate_route
+        )
+
+        navigation_layout.addRow(
+            "Start",
+            self.start_input
+        )
+
+        navigation_layout.addRow(
+            "Destination",
+            self.destination_input
+        )
+
+        navigation_layout.addRow(
+            "Route",
+            self.route_mode
+        )
+
+        navigation_layout.addRow(
+            "Starfield",
+            self.background_radius
+        )
+
+        navigation_layout.addRow(
+            self.generate_button
+        )
+
+        sidebar_layout.addWidget(
+            navigation_group
+        )
+
+        # --------------------------------------------------------
+        # Status
+        # --------------------------------------------------------
+
+        status_group = QGroupBox(
+            "STATUS"
+        )
+
+        status_layout = QVBoxLayout(
+            status_group
+        )
+
+        self.status_label = QLabel(
+            "Ready"
+        )
+
+        self.status_label.setObjectName(
+            "statusLabel"
+        )
+
+        self.status_label.setWordWrap(
+            True
+        )
+
+        status_layout.addWidget(
+            self.status_label
+        )
+
+        sidebar_layout.addWidget(
+            status_group
+        )
+
+        # --------------------------------------------------------
+        # Route information
+        # --------------------------------------------------------
+
+        route_group = QGroupBox(
+            "ROUTE SUMMARY"
+        )
+
+        route_layout = QVBoxLayout(
+            route_group
+        )
 
         self.route_text = QTextEdit()
-        self.route_text.setReadOnly(True)
-        route_layout.addWidget(self.route_text)
 
-        splitter.addWidget(route_panel)
+        self.route_text.setReadOnly(
+            True
+        )
+
+        route_layout.addWidget(
+            self.route_text
+        )
+
+        sidebar_layout.addWidget(
+            route_group,
+            1
+        )
+
+        # --------------------------------------------------------
+        # Add sidebar
+        # --------------------------------------------------------
+
+        main_splitter.addWidget(
+            sidebar
+        )
+
+        # ========================================================
+        # MAP
+        # ========================================================
 
         self.web_view = QWebEngineView()
-        splitter.addWidget(self.web_view)
 
-        splitter.setStretchFactor(0, 0)
-        splitter.setStretchFactor(1, 1)
-        splitter.setSizes([320, 1100])
+        main_splitter.addWidget(
+            self.web_view
+        )
 
-        root_layout.addWidget(splitter, 1)
+        main_splitter.setStretchFactor(
+            0,
+            0
+        )
+
+        main_splitter.setStretchFactor(
+            1,
+            1
+        )
+
+        main_splitter.setSizes([
+            350,
+            1150
+        ])
+
+        root_layout.addWidget(
+            main_splitter,
+            1
+        )
+
+    def _apply_style(self):
+
+        self.setStyleSheet(
+            """
+            QMainWindow {
+                background-color: #090d14;
+            }
+
+            QWidget {
+                color: #d9e2f0;
+                font-family: "Segoe UI";
+                font-size: 10pt;
+            }
+
+            QLabel#appTitle {
+                color: #ffffff;
+                font-size: 18pt;
+                font-weight: 600;
+                padding: 6px 8px;
+            }
+
+            QGroupBox {
+                background-color: #0d131d;
+                border: 1px solid #202b3a;
+                border-radius: 8px;
+                margin-top: 10px;
+                padding: 10px;
+            }
+
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 12px;
+                padding: 0 5px;
+                color: #7fdfff;
+                font-weight: 600;
+            }
+
+            QLineEdit,
+            QComboBox,
+            QDoubleSpinBox {
+                background-color: #111a26;
+                border: 1px solid #2a394d;
+                border-radius: 5px;
+                padding: 7px 8px;
+                color: #edf5ff;
+            }
+
+            QLineEdit:focus,
+            QComboBox:focus,
+            QDoubleSpinBox:focus {
+                border: 1px solid #00d9ff;
+            }
+
+            QPushButton {
+                background-color: #008fa8;
+                border: none;
+                border-radius: 6px;
+                padding: 9px 12px;
+                color: white;
+                font-weight: 600;
+            }
+
+            QPushButton:hover {
+                background-color: #00a9c7;
+            }
+
+            QPushButton:pressed {
+                background-color: #00798f;
+            }
+
+            QTextEdit {
+                background-color: #080d14;
+                border: 1px solid #202b3a;
+                border-radius: 5px;
+                color: #dbe8f5;
+                font-family: Consolas;
+                font-size: 9pt;
+            }
+
+            QLabel#statusLabel {
+                color: #7fdfff;
+                padding: 4px;
+            }
+
+            QSplitter::handle {
+                background-color: #182230;
+                width: 2px;
+            }
+
+            QScrollBar:vertical {
+                background: #0a1018;
+                width: 10px;
+            }
+
+            QScrollBar::handle:vertical {
+                background: #2a394d;
+                border-radius: 5px;
+            }
+
+            QScrollBar::handle:vertical:hover {
+                background: #3b5068;
+            }
+            """
+    )
 
     def generate_route(self):
         start_name = self.start_input.text().strip()
