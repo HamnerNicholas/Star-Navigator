@@ -20,3 +20,6 @@ Thumbs.db
 
 # Archived development code
 Old/
+
+# Precalculated Route Segments for Cache 
+data/compiled/

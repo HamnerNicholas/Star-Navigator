@@ -3,6 +3,7 @@ import networkx as nx
 from .config import (
     CATALOG_FILE,
     STAR_NAME_FILE,
+    GRAPH_CACHE_FILE,
     MAX_JUMP_DISTANCE,
     BACKGROUND_RADIUS,
     INTERACTIVE_MAP_FILE,
@@ -17,6 +18,9 @@ from .catalog import (
 from .navigation.graph import (
     build_navigation_graph,
     print_graph_info,
+    save_navigation_graph,
+    load_navigation_graph,
+    graph_cache_is_valid,
 )
 
 from .navigation.routing import (
@@ -68,13 +72,42 @@ def main():
     )
 
     # ========================================================
-    # BUILD NAVIGATION GRAPH
+    # LOAD OR BUILD NAVIGATION GRAPH
     # ========================================================
 
-    graph = build_navigation_graph(
+    if graph_cache_is_valid(
+        GRAPH_CACHE_FILE,
         stars,
         MAX_JUMP_DISTANCE
-    )
+    ):
+
+        print()
+        print(
+            "Loading cached navigation graph..."
+        )
+
+        graph = load_navigation_graph(
+            GRAPH_CACHE_FILE,
+            stars
+        )
+
+    else:
+
+        print()
+        print(
+            "Building navigation graph..."
+        )
+
+        graph = build_navigation_graph(
+            stars,
+            MAX_JUMP_DISTANCE
+        )
+
+        save_navigation_graph(
+            graph,
+            GRAPH_CACHE_FILE,
+            MAX_JUMP_DISTANCE
+        )
 
     print_graph_info(
         graph

@@ -5,13 +5,20 @@ from pathlib import Path
 # PROJECT PATHS
 # ============================================================
 
-BASE_DIR = Path(
-    __file__
-).resolve().parent
+BASE_DIR = (
+    Path(__file__)
+    .resolve()
+    .parent
+)
 
 DATA_DIR = (
     BASE_DIR
     / "data"
+)
+
+COMPILED_DIR = (
+    DATA_DIR
+    / "compiled"
 )
 
 
@@ -29,6 +36,17 @@ STAR_NAME_FILE = (
     / "star_names.csv"
 )
 
+GRAPH_CACHE_FILE = (
+    COMPILED_DIR
+    / "navigation_graph.pkl"
+)
+
+
+# ============================================================
+# NAVIGATION
+# ============================================================
+
+MAX_JUMP_DISTANCE = 10.0
 
 # ============================================================
 # CONSTELLATION DATA
@@ -50,14 +68,7 @@ CONSTELLATION_GAIA_FILE = (
 )
 
 # ============================================================
-# NAVIGATION SETTINGS
-# ============================================================
-
-MAX_JUMP_DISTANCE = 10.0
-
-
-# ============================================================
-# RENDERER SETTINGS
+# RENDERING
 # ============================================================
 
 BACKGROUND_RADIUS = 70.0

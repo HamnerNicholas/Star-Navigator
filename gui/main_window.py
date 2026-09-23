@@ -34,12 +34,17 @@ from ..renderers.interactive import draw_interactive_map
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, graph, stars, lookup):
+    def __init__(self, graph, stars):
         super().__init__()
 
         self.graph = graph
         self.stars = stars
-        self.lookup = lookup
+
+        self.lookup = {
+            star.display_name.lower():
+            star.source_id
+            for star in stars
+        }
 
         self.current_route = None
         self.current_figure = None

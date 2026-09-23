@@ -4,6 +4,7 @@ import networkx as nx
 
 from scipy.spatial import cKDTree
 
+import pickle
 
 def star_distance(
     star_a,
@@ -98,6 +99,195 @@ def build_navigation_graph(
 
     return graph
 
+def save_navigation_graph(
+    graph,
+    filename,
+    max_jump_distance
+):
+
+    filename.parent.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    # --------------------------------------------------------
+    # Create a cache graph containing only topology + distance
+    # --------------------------------------------------------
+
+    cached_graph = nx.Graph()
+
+    cached_graph.add_nodes_from(
+        graph.nodes
+    )
+
+    for source, target, data in (
+        graph.edges(data=True)
+    ):
+
+        cached_graph.add_edge(
+            source,
+            target,
+            distance=data["distance"]
+        )
+
+    # Store metadata on the cached graph.
+
+    cached_graph.graph[
+        "cache_version"
+    ] = 1
+
+    cached_graph.graph[
+        "max_jump_distance"
+    ] = max_jump_distance
+
+    cached_graph.graph[
+        "node_count"
+    ] = cached_graph.number_of_nodes()
+
+    cached_graph.graph[
+        "edge_count"
+    ] = cached_graph.number_of_edges()
+
+    # --------------------------------------------------------
+    # Write cache
+    # --------------------------------------------------------
+
+    with open(
+        filename,
+        "wb"
+    ) as file:
+
+        pickle.dump(
+            cached_graph,
+            file,
+            protocol=pickle.HIGHEST_PROTOCOL
+        )
+
+    print()
+    print(
+        f"Navigation graph cache saved:"
+    )
+
+    print(
+        f"  {filename}"
+    )
+
+def graph_cache_is_valid(
+    filename,
+    stars,
+    max_jump_distance
+):
+
+    if not filename.exists():
+
+        return False
+
+    try:
+
+        with open(
+            filename,
+            "rb"
+        ) as file:
+
+            cached_graph = pickle.load(
+                file
+            )
+
+    except Exception:
+
+        return False
+
+    # --------------------------------------------------------
+    # Version
+    # --------------------------------------------------------
+
+    if cached_graph.graph.get(
+        "cache_version"
+    ) != 1:
+
+        return False
+
+    # --------------------------------------------------------
+    # Jump distance
+    # --------------------------------------------------------
+
+    cached_jump_distance = (
+        cached_graph.graph.get(
+            "max_jump_distance"
+        )
+    )
+
+    if (
+        cached_jump_distance
+        !=
+        max_jump_distance
+    ):
+
+        return False
+
+    # --------------------------------------------------------
+    # Node count
+    # --------------------------------------------------------
+
+    if (
+        cached_graph.number_of_nodes()
+        !=
+        len(stars)
+    ):
+
+        return False
+
+    # --------------------------------------------------------
+    # Node IDs
+    # --------------------------------------------------------
+
+    cached_ids = set(
+        cached_graph.nodes
+    )
+
+    current_ids = {
+        star.source_id
+        for star in stars
+    }
+
+    if cached_ids != current_ids:
+
+        return False
+
+    return True
+
+def load_navigation_graph(
+    filename,
+    stars
+):
+
+    with open(
+        filename,
+        "rb"
+    ) as file:
+
+        graph = pickle.load(
+            file
+        )
+
+    # --------------------------------------------------------
+    # Attach current Star objects
+    # --------------------------------------------------------
+
+    stars_by_id = {
+        star.source_id: star
+        for star in stars
+    }
+
+    for source_id in graph.nodes:
+
+        graph.nodes[
+            source_id
+        ]["star"] = stars_by_id[
+            source_id
+        ]
+
+    return graph
 
 def print_graph_info(
     graph
