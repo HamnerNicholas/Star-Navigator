@@ -157,8 +157,24 @@ class MainWindow(QMainWindow):
             "Constellation Lines"
         )
 
+        self.constellation_names_check = QCheckBox(
+            "Constellation Names"
+        )
+
         self.constellation_check.setChecked(
             False
+        )
+
+        self.constellation_names_check.setChecked(
+            False
+        )
+
+        navigation_layout.addRow(
+            self.constellation_check
+        )
+
+        navigation_layout.addRow(
+            self.constellation_names_check
         )
 
         navigation_layout.addRow(
@@ -426,7 +442,7 @@ class MainWindow(QMainWindow):
                 font-weight: 600;
             }
 
-            QLineEdit,
+             QLineEdit,
             QComboBox,
             QDoubleSpinBox {
                 background-color: #111a26;
@@ -434,12 +450,30 @@ class MainWindow(QMainWindow):
                 border-radius: 5px;
                 padding: 7px 8px;
                 color: #edf5ff;
+                selection-background-color: #008fa8;
+                selection-color: white;
+            }
+
+            QLineEdit:hover,
+            QComboBox:hover,
+            QDoubleSpinBox:hover {
+                border: 1px solid #3b5068;
             }
 
             QLineEdit:focus,
             QComboBox:focus,
             QDoubleSpinBox:focus {
+                background-color: #121e2c;
                 border: 1px solid #00d9ff;
+            }
+
+            QComboBox QAbstractItemView {
+                background-color: #111a26;
+                border: 1px solid #2a394d;
+                color: #ffffff;
+                selection-background-color: #087f98;
+                selection-color: #ffffff;
+                outline: none;
             }
 
             QPushButton {
@@ -490,6 +524,42 @@ class MainWindow(QMainWindow):
 
             QScrollBar::handle:vertical:hover {
                 background: #3b5068;
+            }
+
+            QListWidget {
+                background-color: #080d14;
+                border: 1px solid #202b3a;
+                border-radius: 5px;
+                color: #dbe8f5;
+                outline: none;
+            }
+
+            QListWidget::item {
+                padding: 7px 6px;
+                border-radius: 4px;
+            }
+
+            QListWidget::item:hover {
+                background-color: #142333;
+            }
+
+            QListWidget::item:selected {
+                background-color: #087f98;
+                color: white;
+                border: 1px solid #00d9ff;
+            }
+
+            QListWidget::item:selected:active {
+                background-color: #087f98;
+                color: white;
+            }
+
+            QLabel#systemInfo {
+                background-color: #080d14;
+                border: 1px solid #202b3a;
+                border-radius: 5px;
+                padding: 10px;
+                color: #dbe8f5;
             }
             """
     )
@@ -588,6 +658,10 @@ class MainWindow(QMainWindow):
             self.constellation_check.isChecked()
         )
 
+        show_constellation_names = (
+            self.constellation_names_check.isChecked()
+        )
+
         try:
             output_file = Path(INTERACTIVE_MAP_FILE)
 
@@ -602,7 +676,11 @@ class MainWindow(QMainWindow):
                 route=route,
                 filename=INTERACTIVE_MAP_FILE,
                 background_radius=background_radius,
-                show_constellations=show_constellations
+                show_constellations=show_constellations,
+                show_constellation_names=(
+                    show_constellation_names
+                    and show_constellations
+                )
             )
 
             self.web_view.setUrl(

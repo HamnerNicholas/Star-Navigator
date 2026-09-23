@@ -10,6 +10,7 @@ from .constellations import (
     load_constellation_stars,
     load_constellation_definitions,
     build_constellation_lines,
+    build_constellation_labels,
 )
 
 from ..config import (
@@ -26,7 +27,8 @@ def draw_interactive_map(
     route,
     filename="interactive_star_map.html",
     background_radius=70.0,
-    show_constellations=False
+    show_constellations=False,
+    show_constellation_names=False
 ):
     """
     Render an interactive 3D navigation map using Plotly.
@@ -307,7 +309,61 @@ def draw_interactive_map(
             f"Skipped constellation segments: "
             f"{skipped_segments:,}"
         )
-        
+
+    # ========================================================
+    # CONSTELLATION NAMES
+    # ========================================================
+
+    if show_constellation_names:
+
+        constellation_labels = (
+            build_constellation_labels(
+                constellation_stars,
+                constellation_data,
+                constellation_radius
+            )
+        )
+
+        fig.add_trace(
+            go.Scatter3d(
+
+                x=[
+                    label["x"]
+                    for label
+                    in constellation_labels
+                ],
+
+                y=[
+                    label["y"]
+                    for label
+                    in constellation_labels
+                ],
+
+                z=[
+                    label["z"]
+                    for label
+                    in constellation_labels
+                ],
+
+                mode="text",
+
+                text=[
+                    label["name"]
+                    for label
+                    in constellation_labels
+                ],
+
+                textfont=dict(
+                    color="rgba(190, 220, 255, 0.85)",
+                    size=11
+                ),
+
+                hoverinfo="skip",
+
+                showlegend=False
+            )
+        )
+
     # ========================================================
     # ROUTE LINE DATA
     # ========================================================
@@ -669,6 +725,15 @@ def draw_interactive_map(
             color="white"
         ),
 
+        hoverlabel=dict(
+            bgcolor="#101923",
+            bordercolor="#00d9ff",
+            font=dict(
+                color="#edf5ff",
+                size=12
+            )
+        ),
+
         legend=dict(
 
             bgcolor=(
@@ -714,6 +779,7 @@ def draw_interactive_map(
             b=0,
             t=80
         )
+        
     )
 
     # ========================================================

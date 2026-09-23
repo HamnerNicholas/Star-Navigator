@@ -272,3 +272,144 @@ def build_constellation_lines(
         total_segments,
         skipped_segments
     )
+
+def build_constellation_labels(
+    constellation_stars,
+    constellation_data,
+    radius
+):
+    """
+    Create one label position for each constellation.
+
+    The label position is calculated from the average
+    sky direction of the constellation's available stars,
+    then normalized back onto the celestial sphere.
+    """
+
+    labels = []
+
+    for constellation in (
+        constellation_data["constellations"]
+    ):
+
+        iau = constellation.get(
+            "iau"
+        )
+
+        name = (
+            constellation
+            .get(
+                "common_name",
+                {}
+            )
+            .get(
+                "native"
+            )
+            or iau
+        )
+
+        hip_ids = set()
+
+        for line in constellation.get(
+            "lines",
+            []
+        ):
+
+            for value in line:
+
+                if isinstance(
+                    value,
+                    int
+                ):
+
+                    hip_ids.add(
+                        value
+                    )
+
+        if not hip_ids:
+            continue
+
+        # ----------------------------------------------------
+        # Average the unit sky directions
+        # ----------------------------------------------------
+
+        sum_x = 0.0
+        sum_y = 0.0
+        sum_z = 0.0
+
+        valid_stars = 0
+
+        for hip_id in hip_ids:
+
+            star = (
+                constellation_stars.get(
+                    hip_id
+                )
+            )
+
+            if star is None:
+                continue
+
+            x, y, z = sky_direction(
+                star["ra_deg"],
+                star["dec_deg"],
+                1.0
+            )
+
+            sum_x += x
+            sum_y += y
+            sum_z += z
+
+            valid_stars += 1
+
+        if valid_stars == 0:
+            continue
+
+        # ----------------------------------------------------
+        # Normalize the averaged direction
+        # ----------------------------------------------------
+
+        magnitude = math.sqrt(
+            sum_x * sum_x
+            +
+            sum_y * sum_y
+            +
+            sum_z * sum_z
+        )
+
+        if magnitude == 0:
+            continue
+
+        label_x = (
+            sum_x
+            /
+            magnitude
+            *
+            radius
+        )
+
+        label_y = (
+            sum_y
+            /
+            magnitude
+            *
+            radius
+        )
+
+        label_z = (
+            sum_z
+            /
+            magnitude
+            *
+            radius
+        )
+
+        labels.append({
+            "iau": iau,
+            "name": name,
+            "x": label_x,
+            "y": label_y,
+            "z": label_z
+        })
+
+    return labels
