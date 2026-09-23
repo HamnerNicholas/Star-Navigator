@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtWidgets import QCheckBox
 
 import networkx as nx
 
@@ -152,6 +153,18 @@ class MainWindow(QMainWindow):
             "Destination system"
         )
 
+        self.constellation_check = QCheckBox(
+            "Constellation Lines"
+        )
+
+        self.constellation_check.setChecked(
+            False
+        )
+
+        navigation_layout.addRow(
+            self.constellation_check
+        )
+
         # ========================================================
         # STAR NAME AUTOCOMPLETE
         # ========================================================
@@ -224,7 +237,7 @@ class MainWindow(QMainWindow):
 
         self.background_radius.setRange(
             1.0,
-            100.0
+            200.0
         )
 
         self.background_radius.setSingleStep(
@@ -567,33 +580,35 @@ class MainWindow(QMainWindow):
         self.route_text.setPlainText("\n".join(lines))
 
     def _update_map(self, route):
+        background_radius = (
+            self.background_radius.value()
+        )
+
+        show_constellations = (
+            self.constellation_check.isChecked()
+        )
+
         try:
             output_file = Path(INTERACTIVE_MAP_FILE)
 
-            figure = draw_interactive_map(
-                self.graph,
-                self.stars,
-                route,
-                filename=output_file,
-                background_radius=self.background_radius.value(),
+            print(
+                "Constellations:",
+                self.constellation_check.isChecked()
+            )
+
+            draw_interactive_map(
+                graph=self.graph,
+                stars=self.stars,
+                route=route,
+                filename=INTERACTIVE_MAP_FILE,
+                background_radius=background_radius,
+                show_constellations=show_constellations
             )
 
             self.web_view.setUrl(
                 QUrl.fromLocalFile(
                     str(INTERACTIVE_MAP_FILE)
                 )
-            )
-
-            self.current_figure = figure
-
-            html = figure.to_html(
-                include_plotlyjs=True,
-                full_html=True,
-            )
-
-            self.web_view.setHtml(
-                html,
-                QUrl.fromLocalFile(str(output_file.parent.resolve()) + "/"),
             )
 
         except Exception as error:

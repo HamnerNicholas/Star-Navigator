@@ -6,12 +6,27 @@ from .colors import gaia_color_to_rgb
 
 from ..config import MAX_JUMP_DISTANCE
 
+from .constellations import (
+    load_constellation_stars,
+    load_constellation_definitions,
+    build_constellation_lines,
+)
+
+from ..config import (
+    MAX_JUMP_DISTANCE,
+    CONSTELLATION_LINES_FILE,
+    CONSTELLATION_GAIA_FILE,
+)
+
+
+
 def draw_interactive_map(
     graph,
     stars,
     route,
     filename="interactive_star_map.html",
-    background_radius=70.0
+    background_radius=70.0,
+    show_constellations=False
 ):
     """
     Render an interactive 3D navigation map using Plotly.
@@ -221,6 +236,78 @@ def draw_interactive_map(
         )
     )
 
+    # ========================================================
+    # CONSTELLATIONS
+    # ========================================================
+
+    if show_constellations:
+
+        constellation_stars = (
+            load_constellation_stars(
+                CONSTELLATION_GAIA_FILE
+            )
+        )
+
+        constellation_data = (
+            load_constellation_definitions(
+                CONSTELLATION_LINES_FILE
+            )
+        )
+
+        constellation_radius = max(
+            background_radius + 100.0,
+            200.0
+        )
+
+        (
+            constellation_traces,
+            constellation_segments,
+            skipped_segments
+        ) = build_constellation_lines(
+            constellation_stars,
+            constellation_data,
+            constellation_radius
+        )
+
+        for constellation in (
+            constellation_traces
+        ):
+
+            fig.add_trace(
+                go.Scatter3d(
+
+                    x=constellation["x"],
+                    y=constellation["y"],
+                    z=constellation["z"],
+
+                    mode="lines",
+
+                    line=dict(
+                        color=(
+                            "rgba(120, "
+                            "190, "
+                            "255, "
+                            "0.65)"
+                        ),
+                        width=2
+                    ),
+
+                    hoverinfo="skip",
+
+                    showlegend=False
+                )
+            )
+
+        print(
+            f"Constellation segments: "
+            f"{constellation_segments:,}"
+        )
+
+        print(
+            f"Skipped constellation segments: "
+            f"{skipped_segments:,}"
+        )
+        
     # ========================================================
     # ROUTE LINE DATA
     # ========================================================

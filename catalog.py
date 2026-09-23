@@ -38,7 +38,13 @@ def parse_optional_float(value):
 
     value = value.strip()
 
-    if value == "":
+    if value in (
+        "",
+        "--",
+        "null",
+        "NULL",
+        "None"
+    ):
         return None
 
     return float(value)

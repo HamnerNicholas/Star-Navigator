@@ -238,7 +238,8 @@ def main():
         stars,
         shortest_route,
         filename=INTERACTIVE_MAP_FILE,
-        background_radius=BACKGROUND_RADIUS
+        background_radius=200.0,
+        show_constellations=True
     )
 
     # ========================================================

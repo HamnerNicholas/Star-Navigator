@@ -21,7 +21,7 @@ DATA_DIR = (
 
 CATALOG_FILE = (
     DATA_DIR
-    / "gaia_100ly.csv"
+    / "gaia_200ly.csv"
 )
 
 STAR_NAME_FILE = (
@@ -29,6 +29,25 @@ STAR_NAME_FILE = (
     / "star_names.csv"
 )
 
+
+# ============================================================
+# CONSTELLATION DATA
+# ============================================================
+
+CONSTELLATION_DIR = (
+    DATA_DIR
+    / "constellations"
+)
+
+CONSTELLATION_LINES_FILE = (
+    CONSTELLATION_DIR
+    / "western_index.json"
+)
+
+CONSTELLATION_GAIA_FILE = (
+    CONSTELLATION_DIR
+    / "constellation_stars.csv"
+)
 
 # ============================================================
 # NAVIGATION SETTINGS
