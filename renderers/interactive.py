@@ -28,7 +28,7 @@ def draw_interactive_map(
     filename="interactive_star_map.html",
     background_radius=70.0,
     show_constellations=False,
-    show_constellation_names=False
+    show_constellation_names=False,
 ):
     """
     Render an interactive 3D navigation map using Plotly.
@@ -677,6 +677,41 @@ def draw_interactive_map(
     )
 
     # ========================================================
+    # SELECTED SYSTEM HIGHLIGHT
+    # ========================================================
+
+    selected_x, selected_y, selected_z = (
+        route_stars[0].xyz()
+    )
+
+    fig.add_trace(
+        go.Scatter3d(
+
+            x=[selected_x],
+            y=[selected_y],
+            z=[selected_z],
+
+            mode="markers",
+
+            marker=dict(
+                size=10,
+                color="magenta",
+                opacity=1.0,
+
+                line=dict(
+                    color="purple",
+                    width=3
+                )
+            ),
+
+            hoverinfo="skip",
+
+            name="Selected System",
+
+            showlegend=False
+        )
+    )
+    # ========================================================
     # TITLE
     # ========================================================
 
@@ -788,7 +823,9 @@ def draw_interactive_map(
 
     fig.write_html(
         filename,
-        include_plotlyjs=True
+        include_plotlyjs=True,
+        full_html=True,
+        div_id="starNavigatorPlot"
     )
 
     print(

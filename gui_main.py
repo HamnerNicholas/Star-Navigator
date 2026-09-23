@@ -23,7 +23,7 @@ from Star_Navigator.navigation.graph import (
 from Star_Navigator.gui.main_window import MainWindow
 from Star_Navigator.navigation.graph import build_navigation_graph
 from Star_Navigator.navigation.routing import build_star_lookup
-
+from Star_Navigator.catalog import add_sol
 
 def main():
 
@@ -38,6 +38,11 @@ def main():
     stars = load_gaia_catalog(
         CATALOG_FILE,
         star_names
+    )
+
+
+    add_sol(
+        stars
     )
 
     # --------------------------------------------------------

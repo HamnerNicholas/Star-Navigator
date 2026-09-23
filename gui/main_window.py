@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QSplitter,
     QTextEdit,
     QVBoxLayout,
+    QListWidget,
     QWidget,
 )
 from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -36,6 +37,8 @@ from ..renderers.interactive import draw_interactive_map
 class MainWindow(QMainWindow):
     def __init__(self, graph, stars):
         super().__init__()
+
+        self.current_selected_source_id = None
 
         self.graph = graph
         self.stars = stars
@@ -54,6 +57,28 @@ class MainWindow(QMainWindow):
 
         self._build_ui()
         self._apply_style()
+
+        self.web_view.loadFinished.connect(
+            self._on_map_loaded
+        )
+
+    def _on_map_loaded(
+        self,
+        success
+    ):
+
+        if not success:
+            return
+
+        if (
+            self.current_selected_source_id
+            is None
+        ):
+            return
+
+        self._update_selected_system(
+            self.current_selected_source_id
+        )
 
     def _build_ui(self):
 
@@ -121,9 +146,9 @@ class MainWindow(QMainWindow):
             12
         )
 
-        # --------------------------------------------------------
-        # Navigation group
-        # --------------------------------------------------------
+        # ========================================================
+        # NAVIGATION GROUP
+        # ========================================================
 
         navigation_group = QGroupBox(
             "NAVIGATION"
@@ -144,6 +169,10 @@ class MainWindow(QMainWindow):
             10
         )
 
+        # --------------------------------------------------------
+        # Start
+        # --------------------------------------------------------
+
         self.start_input = QLineEdit(
             "Sol"
         )
@@ -152,38 +181,16 @@ class MainWindow(QMainWindow):
             "Starting system"
         )
 
-        self.destination_input = QLineEdit()
+        # --------------------------------------------------------
+        # Destination
+        # --------------------------------------------------------
+
+        self.destination_input = (
+            QLineEdit()
+        )
 
         self.destination_input.setPlaceholderText(
             "Destination system"
-        )
-
-        self.constellation_check = QCheckBox(
-            "Constellation Lines"
-        )
-
-        self.constellation_names_check = QCheckBox(
-            "Constellation Names"
-        )
-
-        self.constellation_check.setChecked(
-            False
-        )
-
-        self.constellation_names_check.setChecked(
-            False
-        )
-
-        navigation_layout.addRow(
-            self.constellation_check
-        )
-
-        navigation_layout.addRow(
-            self.constellation_names_check
-        )
-
-        navigation_layout.addRow(
-            self.constellation_check
         )
 
         # ========================================================
@@ -199,18 +206,24 @@ class MainWindow(QMainWindow):
             key=str.lower
         )
 
-        self.star_name_model = QStringListModel(
-            star_names
+        self.star_name_model = (
+            QStringListModel(
+                star_names
+            )
         )
 
-        self.start_completer = QCompleter(
-            self.star_name_model,
-            self
+        self.start_completer = (
+            QCompleter(
+                self.star_name_model,
+                self
+            )
         )
 
-        self.destination_completer = QCompleter(
-            self.star_name_model,
-            self
+        self.destination_completer = (
+            QCompleter(
+                self.star_name_model,
+                self
+            )
         )
 
         for completer in (
@@ -227,7 +240,9 @@ class MainWindow(QMainWindow):
             )
 
             completer.setCompletionMode(
-                QCompleter.CompletionMode.PopupCompletion
+                QCompleter
+                .CompletionMode
+                .PopupCompletion
             )
 
             completer.setMaxVisibleItems(
@@ -242,6 +257,10 @@ class MainWindow(QMainWindow):
             self.destination_completer
         )
 
+        # --------------------------------------------------------
+        # Route mode
+        # --------------------------------------------------------
+
         self.route_mode = QComboBox()
 
         self.route_mode.addItem(
@@ -254,7 +273,13 @@ class MainWindow(QMainWindow):
             "fewest_jumps"
         )
 
-        self.background_radius = QDoubleSpinBox()
+        # --------------------------------------------------------
+        # Starfield radius
+        # --------------------------------------------------------
+
+        self.background_radius = (
+            QDoubleSpinBox()
+        )
 
         self.background_radius.setRange(
             1.0,
@@ -277,6 +302,34 @@ class MainWindow(QMainWindow):
             " ly"
         )
 
+        # --------------------------------------------------------
+        # Constellation controls
+        # --------------------------------------------------------
+
+        self.constellation_check = (
+            QCheckBox(
+                "Constellation Lines"
+            )
+        )
+
+        self.constellation_names_check = (
+            QCheckBox(
+                "Constellation Names"
+            )
+        )
+
+        self.constellation_check.setChecked(
+            False
+        )
+
+        self.constellation_names_check.setChecked(
+            False
+        )
+
+        # --------------------------------------------------------
+        # Generate route button
+        # --------------------------------------------------------
+
         self.generate_button = QPushButton(
             "GENERATE ROUTE"
         )
@@ -284,6 +337,10 @@ class MainWindow(QMainWindow):
         self.generate_button.clicked.connect(
             self.generate_route
         )
+
+        # --------------------------------------------------------
+        # Add navigation controls
+        # --------------------------------------------------------
 
         navigation_layout.addRow(
             "Start",
@@ -306,6 +363,14 @@ class MainWindow(QMainWindow):
         )
 
         navigation_layout.addRow(
+            self.constellation_check
+        )
+
+        navigation_layout.addRow(
+            self.constellation_names_check
+        )
+
+        navigation_layout.addRow(
             self.generate_button
         )
 
@@ -313,9 +378,9 @@ class MainWindow(QMainWindow):
             navigation_group
         )
 
-        # --------------------------------------------------------
-        # Status
-        # --------------------------------------------------------
+        # ========================================================
+        # STATUS
+        # ========================================================
 
         status_group = QGroupBox(
             "STATUS"
@@ -345,9 +410,9 @@ class MainWindow(QMainWindow):
             status_group
         )
 
-        # --------------------------------------------------------
-        # Route information
-        # --------------------------------------------------------
+        # ========================================================
+        # ROUTE SUMMARY
+        # ========================================================
 
         route_group = QGroupBox(
             "ROUTE SUMMARY"
@@ -357,14 +422,14 @@ class MainWindow(QMainWindow):
             route_group
         )
 
-        self.route_text = QTextEdit()
+        self.route_list = QListWidget()
 
-        self.route_text.setReadOnly(
-            True
+        self.route_list.currentRowChanged.connect(
+            self.route_selection_changed
         )
 
         route_layout.addWidget(
-            self.route_text
+            self.route_list
         )
 
         sidebar_layout.addWidget(
@@ -372,9 +437,47 @@ class MainWindow(QMainWindow):
             1
         )
 
-        # --------------------------------------------------------
-        # Add sidebar
-        # --------------------------------------------------------
+        # ========================================================
+        # SYSTEM INFORMATION
+        # ========================================================
+
+        system_info_group = QGroupBox(
+            "SYSTEM INFORMATION"
+        )
+
+        system_info_layout = QVBoxLayout(
+            system_info_group
+        )
+
+        self.system_info = QTextEdit()
+
+        self.system_info.setObjectName(
+            "systemInfo"
+        )
+
+        self.system_info.setReadOnly(
+            True
+        )
+
+        self.system_info.setPlaceholderText(
+            "Select a system to view details."
+        )
+
+        self.system_info.setMinimumHeight(
+            250
+        )
+
+        system_info_layout.addWidget(
+            self.system_info
+        )
+
+        sidebar_layout.addWidget(
+            system_info_group
+        )
+
+        # ========================================================
+        # ADD SIDEBAR
+        # ========================================================
 
         main_splitter.addWidget(
             sidebar
@@ -389,6 +492,10 @@ class MainWindow(QMainWindow):
         main_splitter.addWidget(
             self.web_view
         )
+
+        # --------------------------------------------------------
+        # Splitter behavior
+        # --------------------------------------------------------
 
         main_splitter.setStretchFactor(
             0,
@@ -559,102 +666,192 @@ class MainWindow(QMainWindow):
                 color: white;
             }
 
-            QLabel#systemInfo {
+            QTextEdit#systemInfo {
                 background-color: #080d14;
                 border: 1px solid #202b3a;
                 border-radius: 5px;
                 padding: 10px;
                 color: #dbe8f5;
+                selection-background-color: #087f98;
+                selection-color: white;
             }
             """
     )
 
     def generate_route(self):
-        start_name = self.start_input.text().strip()
-        destination_name = self.destination_input.text().strip()
 
-        if not start_name or not destination_name:
+        start_name = (
+            self.start_input.text().strip()
+        )
+
+        destination_name = (
+            self.destination_input.text().strip()
+        )
+
+        if (
+            not start_name
+            or not destination_name
+        ):
+
             self._show_error(
                 "Missing destination",
                 "Enter both a starting system and a destination."
             )
+
             return
 
-        start = find_star(self.lookup, start_name)
-        if start is None:
+        # ========================================================
+        # FIND STARTING SYSTEM
+        # ========================================================
+
+        start_id = find_star(
+            self.lookup,
+            start_name
+        )
+
+        if start_id is None:
+
             self._show_error(
                 "Starting system not found",
                 f"Could not find: {start_name}"
             )
+
             return
 
-        destination = find_star(self.lookup, destination_name)
-        if destination is None:
+        # ========================================================
+        # FIND DESTINATION
+        # ========================================================
+
+        destination_id = find_star(
+            self.lookup,
+            destination_name
+        )
+
+        if destination_id is None:
+
             self._show_error(
                 "Destination not found",
                 f"Could not find: {destination_name}"
             )
+
             return
 
-        mode = self.route_mode.currentData()
+        # ========================================================
+        # GET DISPLAY NAMES
+        # ========================================================
+
+        start_star = self.graph.nodes[
+            start_id
+        ]["star"]
+
+        destination_star = (
+            self.graph.nodes[
+                destination_id
+            ]["star"]
+        )
+
+        # ========================================================
+        # ROUTE MODE
+        # ========================================================
+
+        mode = (
+            self.route_mode.currentData()
+        )
+
+        # ========================================================
+        # CALCULATE ROUTE
+        # ========================================================
 
         try:
+
             route = find_route(
                 self.graph,
-                start.source_id,
-                destination.source_id,
+                start_id,
+                destination_id,
                 mode=mode,
             )
+
         except nx.NetworkXNoPath:
+
             self._show_error(
                 "No route",
                 (
-                    f"No route exists from {start.display_name} "
-                    f"to {destination.display_name} "
-                    f"with a {MAX_JUMP_DISTANCE:.1f} ly jump range."
+                    f"No route exists from "
+                    f"{start_star.display_name} "
+                    f"to "
+                    f"{destination_star.display_name} "
+                    f"with a "
+                    f"{MAX_JUMP_DISTANCE:.1f} ly "
+                    f"jump range."
                 ),
             )
+
             return
 
+        # ========================================================
+        # STORE ROUTE
+        # ========================================================
+
         self.current_route = route
+
         self.status_label.setText(
-            f"Route found: {len(route) - 1} jumps"
+            f"Route found: "
+            f"{len(route) - 1} jumps"
         )
 
-        self._update_route_text(route)
-        self._update_map(route)
+        # ========================================================
+        # UPDATE ROUTE SUMMARY
+        # ========================================================
+
+        self._update_route_text(
+            route
+        )
+
+        # ========================================================
+        # UPDATE SYSTEM INFORMATION
+        # ========================================================
+
+        if self.route_list.count() > 0:
+
+            self.route_list.setCurrentRow(
+                0
+            )
+
+        # ========================================================
+        # UPDATE MAP
+        # ========================================================
+
+        self._update_map(
+            route
+        )
 
     def _update_route_text(self, route):
-        lines = []
-        total_distance = 0.0
 
-        for i in range(len(route) - 1):
-            current_id = route[i]
-            next_id = route[i + 1]
+        self.current_route = route
 
-            current_star = self.graph.nodes[current_id]["star"]
-            next_star = self.graph.nodes[next_id]["star"]
-            distance = self.graph[current_id][next_id]["distance"]
+        self.route_list.clear()
 
-            total_distance += distance
+        for source_id in route:
 
-            if i == 0:
-                lines.append(f"START: {current_star.display_name}")
-            else:
-                lines.append(current_star.display_name)
+            star = self.graph.nodes[
+                source_id
+            ]["star"]
 
-            lines.append(f"   ↓ {distance:.2f} ly")
+            self.route_list.addItem(
+                star.display_name
+            )
 
-        destination = self.graph.nodes[route[-1]]["star"]
-        lines.append(f"DESTINATION: {destination.display_name}")
-        lines.append("")
-        lines.append(f"Jumps: {len(route) - 1}")
-        lines.append(f"Total distance: {total_distance:.2f} ly")
-        lines.append(f"Maximum jump: {MAX_JUMP_DISTANCE:.2f} ly")
+        if self.route_list.count() > 0:
 
-        self.route_text.setPlainText("\n".join(lines))
+            self.route_list.setCurrentRow(
+                0
+            )
 
-    def _update_map(self, route):
+    def _update_map(
+        self,
+        route
+    ):
+
         background_radius = (
             self.background_radius.value()
         )
@@ -668,12 +865,6 @@ class MainWindow(QMainWindow):
         )
 
         try:
-            output_file = Path(INTERACTIVE_MAP_FILE)
-
-            print(
-                "Constellations:",
-                self.constellation_check.isChecked()
-            )
 
             draw_interactive_map(
                 graph=self.graph,
@@ -681,7 +872,9 @@ class MainWindow(QMainWindow):
                 route=route,
                 filename=INTERACTIVE_MAP_FILE,
                 background_radius=background_radius,
-                show_constellations=show_constellations,
+                show_constellations=(
+                    show_constellations
+                ),
                 show_constellation_names=(
                     show_constellation_names
                     and show_constellations
@@ -695,6 +888,7 @@ class MainWindow(QMainWindow):
             )
 
         except Exception as error:
+
             self._show_error(
                 "Map rendering failed",
                 str(error),
@@ -708,4 +902,353 @@ class MainWindow(QMainWindow):
             message,
         )
 
-    
+    def route_selection_changed(
+        self,
+        row
+    ):
+
+        if self.current_route is None:
+
+            self.clear_system_info()
+
+            return
+
+        if row < 0:
+
+            self.clear_system_info()
+
+            return
+
+        if row >= len(
+            self.current_route
+        ):
+
+            self.clear_system_info()
+
+            return
+
+        source_id = (
+            self.current_route[row]
+        )
+
+        star = self.graph.nodes[
+            source_id
+        ]["star"]
+
+        self.show_system_info(
+            star,
+            row
+        )
+
+        self.current_selected_source_id = (
+            source_id
+        )
+
+        self._update_selected_system(
+            source_id
+        )
+
+    def show_system_info(
+        self,
+        star,
+        route_index=None
+    ):
+
+        text = []
+
+        # ========================================================
+        # SYSTEM
+        # ========================================================
+
+        text.append(
+            f"<h2>{star.display_name}</h2>"
+        )
+
+        text.append(
+            "<b>Catalog</b>"
+        )
+
+        text.append(
+            f"Gaia DR3: {star.source_id}"
+        )
+
+        text.append(
+            "<br>"
+        )
+
+        # ========================================================
+        # POSITION
+        # ========================================================
+
+        text.append(
+            "<b>Position</b>"
+        )
+
+        text.append(
+            f"Distance from Sol: "
+            f"{star.distance_ly:.2f} ly"
+        )
+
+        text.append(
+            f"Right Ascension: "
+            f"{star.ra_deg:.4f}°"
+        )
+
+        text.append(
+            f"Declination: "
+            f"{star.dec_deg:.4f}°"
+        )
+
+        # ========================================================
+        # PHOTOMETRY
+        # ========================================================
+
+        text.append(
+            "<br><b>Photometry</b>"
+        )
+
+        if star.magnitude is not None:
+
+            text.append(
+                f"G Magnitude: "
+                f"{star.magnitude:.2f}"
+            )
+
+        else:
+
+            text.append(
+                "G Magnitude: Unavailable"
+            )
+
+        if star.bp_rp is not None:
+
+            text.append(
+                f"BP-RP: "
+                f"{star.bp_rp:.2f}"
+            )
+
+        else:
+
+            text.append(
+                "BP-RP: Unavailable"
+            )
+
+        # ========================================================
+        # MOTION
+        # ========================================================
+
+        text.append(
+            "<br><b>Motion</b>"
+        )
+
+        if star.pmra is not None:
+
+            text.append(
+                f"Proper Motion RA: "
+                f"{star.pmra:.2f} mas/yr"
+            )
+
+        else:
+
+            text.append(
+                "Proper Motion RA: Unavailable"
+            )
+
+        if star.pmdec is not None:
+
+            text.append(
+                f"Proper Motion Dec: "
+                f"{star.pmdec:.2f} mas/yr"
+            )
+
+        else:
+
+            text.append(
+                "Proper Motion Dec: Unavailable"
+            )
+
+        if star.radial_velocity is not None:
+
+            text.append(
+                f"Radial Velocity: "
+                f"{star.radial_velocity:.2f} km/s"
+            )
+
+        else:
+
+            text.append(
+                "Radial Velocity: Unavailable"
+            )
+
+        # ========================================================
+        # ROUTE INFORMATION
+        # ========================================================
+
+        if (
+            route_index is not None
+            and
+            self.current_route is not None
+        ):
+
+            text.append(
+                "<br><b>Route Information</b>"
+            )
+
+            text.append(
+                f"Route Stop: "
+                f"{route_index + 1} "
+                f"of "
+                f"{len(self.current_route)}"
+            )
+
+            # --------------------------------------------
+            # Previous jump
+            # --------------------------------------------
+
+            if route_index > 0:
+
+                previous_id = (
+                    self.current_route[
+                        route_index - 1
+                    ]
+                )
+
+                previous_star = (
+                    self.graph.nodes[
+                        previous_id
+                    ]["star"]
+                )
+
+                jump_distance = (
+                    self.graph[
+                        previous_id
+                    ][
+                        star.source_id
+                    ]["distance"]
+                )
+
+                text.append(
+                    f"Previous: "
+                    f"{previous_star.display_name}"
+                )
+
+                text.append(
+                    f"Previous Jump: "
+                    f"{jump_distance:.2f} ly"
+                )
+
+            # --------------------------------------------
+            # Next jump
+            # --------------------------------------------
+
+            if (
+                route_index
+                <
+                len(self.current_route) - 1
+            ):
+
+                next_id = (
+                    self.current_route[
+                        route_index + 1
+                    ]
+                )
+
+                next_star = (
+                    self.graph.nodes[
+                        next_id
+                    ]["star"]
+                )
+
+                jump_distance = (
+                    self.graph[
+                        star.source_id
+                    ][
+                        next_id
+                    ]["distance"]
+                )
+
+                text.append(
+                    f"Next: "
+                    f"{next_star.display_name}"
+                )
+
+                text.append(
+                    f"Next Jump: "
+                    f"{jump_distance:.2f} ly"
+                )
+
+        self.system_info.setHtml(
+            "<br>".join(text)
+        )
+
+    def clear_system_info(
+        self
+    ):
+
+        self.system_info.clear()
+
+        self.system_info.setPlaceholderText(
+            "Select a system to view details."
+        )
+
+    def _update_selected_system(
+        self,
+        source_id
+    ):
+
+        if source_id not in self.graph.nodes:
+            return
+
+        star = self.graph.nodes[
+            source_id
+        ]["star"]
+
+        x, y, z = star.xyz()
+
+        javascript = f"""
+        (() => {{
+
+            const graph = document.getElementById(
+                "starNavigatorPlot"
+            );
+
+            if (!graph || !graph.data) {{
+                return false;
+            }}
+
+            const traceIndex = graph.data.findIndex(
+                trace =>
+                    trace.name === "Selected System"
+            );
+
+            if (traceIndex === -1) {{
+                console.log(
+                    "Selected System trace not found"
+                );
+
+                return false;
+            }}
+
+            Plotly.restyle(
+                graph,
+                {{
+                    x: [[{x}]],
+                    y: [[{y}]],
+                    z: [[{z}]],
+                    visible: true
+                }},
+                [traceIndex]
+            );
+
+            return true;
+
+        }})();
+        """
+
+        self.web_view.page().runJavaScript(
+            javascript,
+            lambda result: print(
+                "Highlight updated:",
+                result
+            )
+        )
