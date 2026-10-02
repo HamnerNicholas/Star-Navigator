@@ -34,6 +34,11 @@ from .renderers.interactive import (
     draw_interactive_map,
 )
 
+from Star_Navigator.dm import Trait
+from Star_Navigator.dm.generator import (
+    trait_roll,
+    generate_trait,
+)
 
 def main():
 
@@ -280,7 +285,6 @@ def main():
     # ========================================================
 
     fig.show()
-
 
 if __name__ == "__main__":
     main()

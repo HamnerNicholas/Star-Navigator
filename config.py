@@ -71,7 +71,7 @@ CONSTELLATION_GAIA_FILE = (
 # RENDERING
 # ============================================================
 
-BACKGROUND_RADIUS = 70.0
+BACKGROUND_RADIUS = 100.0
 
 INTERACTIVE_MAP_FILE = (
     BASE_DIR
