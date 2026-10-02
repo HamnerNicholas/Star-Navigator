@@ -1,0 +1,7 @@
+PySide6
+plotly
+networkx
+numpy
+scipy
+astropy
+astroquery
