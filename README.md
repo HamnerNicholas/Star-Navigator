@@ -459,6 +459,14 @@ The resulting constellation information is stored under:
 ```text
 data/constellations/
 ```
+---
+# Installation
+
+```bash
+git clone https://github.com/HamnerNicholas/Star-Navigator.git
+cd Star-Navigator
+pip install -r requirements.txt
+```
 
 ---
 
